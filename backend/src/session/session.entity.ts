@@ -1,6 +1,9 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { SubmissionEntity } from '../submission/submission.entity';
 
+const expiresAtColumnType =
+  process.env.LESSON_SYSTEM_DB_DRIVER === 'sqljs' ? 'datetime' : 'timestamptz';
+
 @Entity('sessions')
 export class SessionEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -15,7 +18,7 @@ export class SessionEntity {
   @Column({ unique: true })
   joinCode!: string;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: expiresAtColumnType, nullable: true })
   expiresAt!: Date | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -27,4 +30,3 @@ export class SessionEntity {
   @OneToMany(() => SubmissionEntity, (s) => s.session)
   submissions!: SubmissionEntity[];
 }
-

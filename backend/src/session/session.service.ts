@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SessionInfo } from './session.types';
 import { SessionEntity } from './session.entity';
 
 @Injectable()
-export class SessionService {
+export class SessionService implements OnModuleInit {
   private currentSession: SessionInfo | null = null;
 
   constructor(
@@ -13,7 +13,16 @@ export class SessionService {
     private readonly repo: Repository<SessionEntity>,
   ) {}
 
-  createSession(title: string): SessionInfo {
+  async onModuleInit(): Promise<void> {
+    const [latestSession] = await this.repo.find({
+      order: { createdAt: 'DESC' },
+      take: 1,
+    });
+
+    this.currentSession = latestSession ? this.toSessionInfo(latestSession) : null;
+  }
+
+  async createSession(title: string): Promise<SessionInfo> {
     const joinCode = Math.random().toString(36).slice(2, 8).toUpperCase();
 
     const entity = this.repo.create({
@@ -21,31 +30,9 @@ export class SessionService {
       joinCode,
     });
 
-    const saved = this.repo.save(entity);
+    const saved = await this.repo.save(entity);
 
-    // сохранение асинхронное, но для простоты возвращаем синхронно кэш (данные совпадут)
-    this.currentSession = {
-      id: entity.id,
-      title: entity.title,
-      createdAt: new Date().toISOString(),
-      expiresAt: null,
-      joinCode: entity.joinCode,
-      assignmentFileName: null,
-      assignmentText: null,
-    };
-
-    void saved.then((s) => {
-      this.currentSession = {
-        id: s.id,
-        title: s.title,
-        createdAt: s.createdAt.toISOString(),
-        expiresAt: s.expiresAt ? s.expiresAt.toISOString() : null,
-        joinCode: s.joinCode,
-        assignmentFileName: s.assignmentFileName,
-        assignmentText: s.assignmentText ?? null,
-      };
-    });
-
+    this.currentSession = this.toSessionInfo(saved);
     return this.currentSession;
   }
 
@@ -75,5 +62,17 @@ export class SessionService {
       { assignmentText: trimmed },
     );
     return this.currentSession;
+  }
+
+  private toSessionInfo(session: SessionEntity): SessionInfo {
+    return {
+      id: session.id,
+      title: session.title,
+      createdAt: session.createdAt.toISOString(),
+      expiresAt: session.expiresAt ? session.expiresAt.toISOString() : null,
+      joinCode: session.joinCode,
+      assignmentFileName: session.assignmentFileName,
+      assignmentText: session.assignmentText ?? null,
+    };
   }
 }

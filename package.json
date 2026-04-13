@@ -1,0 +1,67 @@
+{
+  "name": "lesson-system-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Lesson System",
+  "description": "Desktop shell and packaging for lesson-system",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "clean:temp": "node desktop/cleanup-temp-artifacts.cjs",
+    "dev": "concurrently -k -n backend,frontend,electron -c yellow,cyan,green \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:electron\"",
+    "dev:backend": "cross-env LESSON_SYSTEM_DB_DRIVER=sqljs LESSON_SYSTEM_DATA_DIR=.desktop-data PORT=3000 npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1",
+    "dev:electron": "wait-on tcp:3000 http://127.0.0.1:5173 && cross-env ELECTRON_START_URL=http://127.0.0.1:5173/teacher electron .",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac dir",
+    "dist:win:x64:builder": "electron-builder --win portable --x64",
+    "dist:win:arm64:builder": "electron-builder --win portable --arm64",
+    "dist:win:cleanup": "node desktop/cleanup-win-artifacts.cjs",
+    "dist:win:x64": "npm run build && npm run dist:win:x64:builder && npm run dist:win:cleanup",
+    "dist:win:arm64": "npm run build && npm run dist:win:arm64:builder && npm run dist:win:cleanup",
+    "dist:win:all": "npm run build && npm run dist:win:x64:builder && npm run dist:win:arm64:builder && npm run dist:win:cleanup",
+    "dist:win": "npm run dist:win:x64"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.1.0",
+    "electron": "^37.2.1",
+    "electron-builder": "^26.0.12",
+    "wait-on": "^8.0.3"
+  },
+  "build": {
+    "appId": "com.lesson.system.desktop",
+    "productName": "Lesson System",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "frontend/dist/**/*",
+      "backend/dist/**/*",
+      "backend/package.json",
+      "backend/node_modules/**/*"
+    ],
+    "asar": false,
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dir"
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
+  }
+}

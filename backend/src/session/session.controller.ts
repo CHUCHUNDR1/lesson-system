@@ -14,23 +14,17 @@ import { SessionInfo } from './session.types';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import type { Response, Request } from 'express';
-import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-
-function ensureDir(dir: string) {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-}
+import { existsSync } from 'fs';
+import { resolveDataPath, ensureDir } from '../runtime-paths';
 
 @Controller()
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
   @Post('teacher/session')
-  createSession(
+  async createSession(
     @Body('title') title: string,
-  ): SessionInfo {
+  ): Promise<SessionInfo> {
     const safeTitle = title && title.trim().length > 0 ? title.trim() : 'Lesson';
     return this.sessionService.createSession(safeTitle);
   }
@@ -54,8 +48,7 @@ export class SessionController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-          const baseDir = join(process.cwd(), 'data', 'assignment');
-          ensureDir(baseDir);
+          const baseDir = ensureDir(resolveDataPath('assignment'));
           cb(null, baseDir);
         },
         filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
@@ -83,12 +76,7 @@ export class SessionController {
     if (!session || !session.assignmentFileName) {
       throw new HttpException('Assignment not uploaded', HttpStatus.NOT_FOUND);
     }
-    const filePath = join(
-      process.cwd(),
-      'data',
-      'assignment',
-      session.assignmentFileName,
-    );
+    const filePath = resolveDataPath('assignment', session.assignmentFileName);
     if (!existsSync(filePath)) {
       throw new HttpException('Assignment file not found', HttpStatus.NOT_FOUND);
     }
@@ -96,4 +84,3 @@ export class SessionController {
     return res.download(filePath, session.assignmentFileName);
   }
 }
-

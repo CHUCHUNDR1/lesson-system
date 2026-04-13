@@ -14,17 +14,12 @@ import { SubmissionService } from './submission.service';
 import { SubmissionInfo } from './submission.types';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { join, basename } from 'path';
-import { existsSync, mkdirSync } from 'fs';
+import { basename } from 'path';
+import { existsSync } from 'fs';
 import type { Request, Response } from 'express';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 import archiver from 'archiver';
-
-function ensureDir(dir: string) {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-}
+import { ensureDir, resolveDataPath } from '../runtime-paths';
 
 @Controller()
 export class SubmissionController {
@@ -38,8 +33,7 @@ export class SubmissionController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
-          const baseDir = join(process.cwd(), 'data', 'submissions', 'current');
-          ensureDir(baseDir);
+          const baseDir = ensureDir(resolveDataPath('submissions', 'current'));
           cb(null, baseDir);
         },
         filename: (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
@@ -127,4 +121,3 @@ export class SubmissionController {
     await archive.finalize();
   }
 }
-

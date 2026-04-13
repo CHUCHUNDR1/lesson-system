@@ -27,7 +27,7 @@ interface Submission {
 
 const socketBase =
   import.meta.env.VITE_SOCKET_URL?.replace(/\/$/, "") ||
-  "http://localhost:3000";
+  window.location.origin;
 
 export const TeacherPage: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
