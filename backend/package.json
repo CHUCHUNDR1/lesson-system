@@ -1,0 +1,34 @@
+{
+  "name": "lesson-system-backend",
+  "version": "0.1.0",
+  "description": "NestJS backend for lesson-system MVP (file distribution and collection over local network)",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "node dist/main.js",
+    "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.4.22",
+    "@nestjs/typeorm": "^10.0.0",
+    "@nestjs/websockets": "^10.0.0",
+    "archiver": "^7.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.12.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "socket.io": "^4.8.0",
+    "sql.js": "^1.14.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.3",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.0"
+  }
+}

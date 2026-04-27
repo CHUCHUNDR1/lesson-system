@@ -1,0 +1,137 @@
+{
+  "name": "lesson-system-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop builds for the Lesson System application.",
+  "author": "Lesson System",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "build": "npm run build:assets && npm run build:backend && npm run build:frontend",
+    "build:assets": "node electron/scripts/create-assets.cjs",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "desktop:dev": "npm run build && electron .",
+    "pack:mac:app": "npm run build && electron-builder --mac dir --arm64 --x64",
+    "dist:mac": "npm run dist:mac:arm64 && npm run dist:mac:x64",
+    "dist:mac:arm64": "npm run build && electron-builder --mac dmg zip --arm64",
+    "dist:mac:x64": "npm run build && electron-builder --mac dmg zip --x64",
+    "dist:win:x64": "npm run build && electron-builder --win nsis --x64",
+    "dist:desktop": "npm run dist:mac && npm run dist:win:x64"
+  },
+  "devDependencies": {
+    "electron": "^37.10.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.lesson-system.desktop",
+    "productName": "Lesson System",
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "frontend/dist",
+        "to": "frontend/dist"
+      },
+      {
+        "from": "backend/dist",
+        "to": "backend/dist"
+      },
+      {
+        "from": "backend/package.json",
+        "to": "backend/package.json"
+      },
+      {
+        "from": "backend/node_modules",
+        "to": "backend/node_modules",
+        "filter": [
+          "**/*",
+          "!typescript/**/*",
+          "!ts-node-dev/**/*",
+          "!@types/**/*",
+          "!**/*.tsbuildinfo",
+          "!**/*.map"
+        ]
+      },
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.education",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Lesson System Installer ${version}",
+      "background": "build/dmg-background.png",
+      "iconSize": 96,
+      "iconTextSize": 13,
+      "contents": [
+        {
+          "x": 238,
+          "y": 360
+        },
+        {
+          "x": 470,
+          "y": 360,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 768,
+        "height": 512
+      }
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName} Setup ${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lesson System",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "installerSidebar": "build/installer-sidebar.bmp",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

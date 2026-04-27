@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: lesson-system-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lesson
+      POSTGRES_PASSWORD: lesson
+      POSTGRES_DB: lesson
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - lesson-net
+
+  backend:
+    build: ./backend
+    container_name: lesson-system-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: lesson
+      DB_PASSWORD: lesson
+      DB_NAME: lesson
+      PORT: 3000
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    networks:
+      - lesson-net
+
+  frontend:
+    build: ./frontend
+    container_name: lesson-system-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - lesson-net
+
+networks:
+  lesson-net:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
+
